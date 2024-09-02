@@ -2,7 +2,7 @@
 
 **Última Actualización:** 02 de septiembre de 2024
 
-![Tampermonkey](https://static.cdninstagram.com/rsrc.php/v3/yI/r/VsNE-OHk_8a.png)
+![Tampermonkey](https://raw.githubusercontent.com/wernser412/Instagram-Video-Controls/main/GUI.jpg)
 
 ## Descripción
 
