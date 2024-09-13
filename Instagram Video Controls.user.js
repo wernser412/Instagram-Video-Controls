@@ -19,7 +19,7 @@
     const microseconds = Math.floor((time % 1) * 60); // Ajuste de microsegundos a un rango de 60
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}:${microseconds < 10 ? '0' : ''}${microseconds}`;
     };
-    
+
     // Función para añadir controles personalizados a todos los videos
     const addCustomControls = () => {
         const videos = document.querySelectorAll('video:not([data-custom-controls-added])');
