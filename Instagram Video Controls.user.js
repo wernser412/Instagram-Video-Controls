@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Instagram Video Controls
 // @namespace    http://tampermonkey.net/
-// @version      2024.09.02
+// @version      2024.09.12
 // @description  Añade controles personalizados a los videos de Instagram, incluyendo la opción de descargar una imagen del video, y los hace visibles solo cuando el ratón pasa por encima. Incluye opciones de velocidad de reproducción adicionales y muestra microsegundos.
 // @author       wernser412
 // @match        https://www.instagram.com/*
@@ -12,14 +12,14 @@
 (function() {
     'use strict';
 
-    // Función para formatear el tiempo en minutos, segundos y microsegundos
+    // Función para formatear el tiempo en minutos, segundos y microsegundos (formato 60)
     const formatTime = (time) => {
-        const minutes = Math.floor(time / 60);
-        const seconds = Math.floor(time % 60);
-        const milliseconds = Math.floor((time % 1) * 1000);
-        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}.${milliseconds}`;
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    const microseconds = Math.floor((time % 1) * 60); // Ajuste de microsegundos a un rango de 60
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}:${microseconds < 10 ? '0' : ''}${microseconds}`;
     };
-
+    
     // Función para añadir controles personalizados a todos los videos
     const addCustomControls = () => {
         const videos = document.querySelectorAll('video:not([data-custom-controls-added])');
