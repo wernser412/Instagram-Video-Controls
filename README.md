@@ -4,11 +4,11 @@
 
 ![Tampermonkey](https://raw.githubusercontent.com/wernser412/Instagram-Video-Controls/main/GUI.jpg)
 
-## Descripción
+## 🔍 Descripción
 
 **Instagram Video Controls** es un script de usuario para Tampermonkey que añade controles personalizados a los videos de Instagram. Estos controles incluyen la capacidad de reproducir/pausar, ajustar la velocidad de reproducción, entrar en pantalla completa, descargar una imagen del video y mostrar el tiempo transcurrido en minutos, segundos y microsegundos. Los controles solo son visibles cuando se pasa el ratón por encima del video.
 
-## Características
+## ✨ Características
 
 - Reproducir/Pausar video.
 - Ajuste de velocidad de reproducción (0.1x - 2x).
@@ -18,17 +18,17 @@
 - Mostrar el tiempo transcurrido en minutos, segundos y microsegundos.
 - Controles visibles solo al pasar el ratón por encima del video.
 
-## Instalación
+## 📥 Instalación
 
-1. Instala [Tampermonkey](https://www.tampermonkey.net/) en tu navegador.
-2. Crea un nuevo script de usuario y copia el contenido del script en el archivo.
-3. Guarda el script y recarga la página de Instagram.
+1. Instala la extensión [Tampermonkey](https://www.tampermonkey.net/) en tu navegador.
+2. Haz clic en este enlace para instalar el script:  
+   👉 **[Descargar Script](https://github.com/wernser412/Instagram-Video-Controls/raw/refs/heads/main/Instagram%20Video%20Controls.user.js)**
 
-## Uso
+## 🖥️ Uso
 
 Una vez instalado el script, simplemente visita Instagram y reproduce cualquier video. Los controles personalizados aparecerán automáticamente cuando pases el ratón sobre el video.
 
 
-## Licencia
+## 📜 Licencia
 
 Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para obtener más detalles.
