@@ -4,6 +4,7 @@
 // @version      2024.09.12
 // @description  Añade controles personalizados a los videos de Instagram, incluyendo la opción de descargar una imagen del video, y los hace visibles solo cuando el ratón pasa por encima. Incluye opciones de velocidad de reproducción adicionales y muestra microsegundos.
 // @author       wernser412
+// @downloadURL  https://github.com/wernser412/Instagram-Video-Controls/raw/refs/heads/main/Instagram%20Video%20Controls.user.js
 // @match        https://www.instagram.com/*
 // @icon         https://static.cdninstagram.com/rsrc.php/v3/yI/r/VsNE-OHk_8a.png
 // @grant        none
