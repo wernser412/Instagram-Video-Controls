@@ -1,6 +1,6 @@
 # Instagram Video Controls
 
-**Última Actualización:** 08 de septiembre de 2025
+**Última Actualización:** 19 de septiembre de 2025
 
 ![Tampermonkey](https://raw.githubusercontent.com/wernser412/Instagram-Video-Controls/main/GUI.jpg)
 
