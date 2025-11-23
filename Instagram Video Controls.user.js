@@ -7,7 +7,9 @@
 // @downloadURL  https://github.com/wernser412/Instagram-Video-Controls/raw/refs/heads/main/Instagram%20Video%20Controls.user.js
 // @match        https://www.instagram.com/*
 // @icon         https://github.com/wernser412/Instagram-Video-Controls/blob/main/ICONO.png?raw=true
-// @grant        none
+// @grant        GM_registerMenuCommand
+// @grant        GM_setValue
+// @grant        GM_getValue
 // ==/UserScript==
 
 (function() {
