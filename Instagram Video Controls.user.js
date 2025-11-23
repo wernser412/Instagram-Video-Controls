@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Instagram Video Controls
 // @namespace    http://tampermonkey.net/
-// @version      2025.11.16
+// @version      2025.11.22
 // @description  Añade controles personalizados a los videos de Instagram, incluyendo la opción de descargar una imagen del video, y los hace visibles solo cuando el ratón pasa por encima. Incluye opciones de velocidad de reproducción adicionales y muestra microsegundos.
 // @author       wernser412
 // @downloadURL  https://github.com/wernser412/Instagram-Video-Controls/raw/refs/heads/main/Instagram%20Video%20Controls.user.js
@@ -12,6 +12,54 @@
 
 (function() {
     'use strict';
+
+    /**********************************************
+     *    OPCIÓN NUEVA: OCULTAR COMENTARIOS
+     **********************************************/
+
+    const KEY_HIDE_COMMENTS = "ig_hide_comments";
+
+    // Valor inicial si nunca fue creado
+    let hideComments = GM_getValue(KEY_HIDE_COMMENTS, false);
+
+    function applyHideCommentsCSS() {
+        // elimina CSS previo
+        const old = document.getElementById("ig-hide-comments-style");
+        if (old) old.remove();
+
+        // si está apagado → nada
+        if (!hideComments) return;
+
+        // aplica CSS que oculta comentarios
+        const css = `
+            div[class^="x5yr21d x10l6tqk x13vifvy xh8yej3"] {
+                display: none !important;
+            }
+        `;
+
+        const style = document.createElement("style");
+        style.id = "ig-hide-comments-style";
+        style.textContent = css;
+        document.documentElement.appendChild(style);
+    }
+
+    // aplicar inmediatamente
+    applyHideCommentsCSS();
+
+    // añadir opción al menú de Tampermonkey
+    GM_registerMenuCommand(
+        `Ocultar comentarios: ${hideComments ? "ON" : "OFF"}`,
+        () => {
+            hideComments = !hideComments;
+            GM_setValue(KEY_HIDE_COMMENTS, hideComments);
+            applyHideCommentsCSS();
+            location.reload();
+        }
+    );
+
+    /**********************************************
+     *       TU SCRIPT ORIGINAL DE CONTROLES
+     **********************************************/
 
     const STORAGE_KEY = 'ig_auto_volume_level';
     const DEBUG = true;
@@ -58,7 +106,6 @@
         return `${minutes}:${seconds<10?'0':''}${seconds}.${ms.toString().padStart(3,'0')}`;
     }
 
-    // Crear controles personalizados para un video
     function addCustomControls(video){
         if(!video || video.dataset.customControlsAdded) return;
         video.dataset.customControlsAdded='1';
@@ -89,7 +136,6 @@
 
         const unlockAudio = ()=>{ userInteracted=true; };
 
-        // Play/Pause
         const playBtn = document.createElement('button');
         playBtn.textContent='Play';
         playBtn.style.marginBottom='5px';
@@ -99,7 +145,6 @@
             else{ video.pause(); playBtn.textContent='Play'; }
         });
 
-        // Velocidad
         const speedSelect = document.createElement('select');
         speedSelect.style.marginBottom='5px';
         speedSelect.innerHTML=`
@@ -120,7 +165,6 @@
             video.playbackRate=parseFloat(e.target.value);
         });
 
-        // Fullscreen
         const fsBtn=document.createElement('button');
         fsBtn.textContent='Fullscreen';
         fsBtn.style.marginBottom='5px';
@@ -132,7 +176,6 @@
             else if(video.msRequestFullscreen) video.msRequestFullscreen();
         });
 
-        // Descargar imagen
         const dlBtn=document.createElement('button');
         dlBtn.textContent='Download Image';
         dlBtn.style.marginBottom='5px';
@@ -153,11 +196,10 @@
             },'image/png');
         });
 
-        // Volumen
         const volContainer=document.createElement('div');
         volContainer.style.marginBottom='5px';
         volContainer.style.display='flex';
-        volContainer.style.flexDirection='column'; // porcentaje debajo
+        volContainer.style.flexDirection='column';
         volContainer.style.alignItems='flex-start';
         volContainer.style.gap='2px';
 
@@ -184,7 +226,6 @@
         volContainer.appendChild(volSlider);
         volContainer.appendChild(volPercent);
 
-        // Barra de progreso
         const progress=document.createElement('input');
         progress.type='range';
         progress.min=0; progress.max=100; progress.value=0;
@@ -194,7 +235,6 @@
             video.currentTime=(video.duration*progress.value)/100;
         });
 
-        // Tiempo con microsegundos
         const timeDisplay=document.createElement('span');
         timeDisplay.style.marginBottom='5px';
         timeDisplay.textContent='0:00.000';
@@ -203,7 +243,6 @@
             progress.value=(video.currentTime/video.duration)*100;
         });
 
-        // Forzar volumen persistente y auto-unmute
         const applyVolume=()=>{
             const v=getSavedVolume();
             video.volume=v;
@@ -266,5 +305,5 @@
 
     setInterval(()=>{ document.querySelectorAll('video').forEach(v=>{ if(v.dataset._ig_unmute_processing!=='1') forceUnmute(v); }); },1200);
 
-    log('Instagram Video Controls + Auto Volume + Volume Percent loaded.');
+    log('Instagram Video Controls + Ocultar Comentarios Toggle cargado.');
 })();
