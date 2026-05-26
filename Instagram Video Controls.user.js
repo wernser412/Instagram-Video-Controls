@@ -1,311 +1,484 @@
 // ==UserScript==
 // @name         Instagram Video Controls
 // @namespace    http://tampermonkey.net/
-// @version      2025.11.22
-// @description  Añade controles personalizados a los videos de Instagram, incluyendo la opción de descargar una imagen del video, y los hace visibles solo cuando el ratón pasa por encima. Incluye opciones de velocidad de reproducción adicionales y muestra microsegundos.
+// @version      2025.05.26
+// @description  Controles movibles con posición guardada para Instagram Reels
 // @author       wernser412
-// @downloadURL  https://github.com/wernser412/Instagram-Video-Controls/raw/refs/heads/main/Instagram%20Video%20Controls.user.js
 // @match        https://www.instagram.com/*
-// @icon         https://github.com/wernser412/Instagram-Video-Controls/blob/main/ICONO.png?raw=true
-// @grant        GM_registerMenuCommand
-// @grant        GM_setValue
-// @grant        GM_getValue
+// @run-at       document-idle
+// @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
+
     'use strict';
 
-    /**********************************************
-     *    OPCIÓN NUEVA: OCULTAR COMENTARIOS
-     **********************************************/
+    // =========================================
+    // VIDEO ACTIVO
+    // =========================================
 
-    const KEY_HIDE_COMMENTS = "ig_hide_comments";
+    function getActiveVideo() {
 
-    // Valor inicial si nunca fue creado
-    let hideComments = GM_getValue(KEY_HIDE_COMMENTS, false);
+        const videos = [...document.querySelectorAll('video')];
 
-    function applyHideCommentsCSS() {
-        // elimina CSS previo
-        const old = document.getElementById("ig-hide-comments-style");
-        if (old) old.remove();
+        let best = null;
 
-        // si está apagado → nada
-        if (!hideComments) return;
+        let bestArea = 0;
 
-        // aplica CSS que oculta comentarios
-        const css = `
-            div[class^="x5yr21d x10l6tqk x13vifvy xh8yej3"] {
-                display: none !important;
+        videos.forEach(v => {
+
+            const rect = v.getBoundingClientRect();
+
+            const visible =
+                rect.width > 150 &&
+                rect.height > 150 &&
+                rect.bottom > 0 &&
+                rect.top < window.innerHeight;
+
+            if (!visible) return;
+
+            const area = rect.width * rect.height;
+
+            if (area > bestArea) {
+
+                bestArea = area;
+
+                best = v;
             }
-        `;
+        });
 
-        const style = document.createElement("style");
-        style.id = "ig-hide-comments-style";
-        style.textContent = css;
-        document.documentElement.appendChild(style);
+        return best;
     }
 
-    // aplicar inmediatamente
-    applyHideCommentsCSS();
-
-    // añadir opción al menú de Tampermonkey
-    GM_registerMenuCommand(
-        `Ocultar comentarios: ${hideComments ? "ON" : "OFF"}`,
-        () => {
-            hideComments = !hideComments;
-            GM_setValue(KEY_HIDE_COMMENTS, hideComments);
-            applyHideCommentsCSS();
-            location.reload();
-        }
-    );
-
-    /**********************************************
-     *       TU SCRIPT ORIGINAL DE CONTROLES
-     **********************************************/
-
-    const STORAGE_KEY = 'ig_auto_volume_level';
-    const DEBUG = true;
-
-    function log(...args){ if(DEBUG) console.log('[IG-Controls+Vol]', ...args); }
-
-    function getSavedVolume() {
-        const v = localStorage.getItem(STORAGE_KEY);
-        const n = parseFloat(v);
-        return (isFinite(n) && n >= 0 && n <= 1) ? n : 1.0;
-    }
-
-    function saveVolume(v) {
-        try { localStorage.setItem(STORAGE_KEY, String(v)); } catch(e) {}
-    }
-
-    let userInteracted = false;
-
-    function forceUnmute(video) {
-        if (!video) return;
-        try {
-            if (video.dataset._ig_unmute_processing === '1') return;
-            video.dataset._ig_unmute_processing = '1';
-
-            video.removeAttribute('muted');
-            video.muted = false;
-            const vol = getSavedVolume();
-            if(typeof video.volume === 'number') video.volume = vol;
-
-            setTimeout(() => {
-                video.removeAttribute('muted');
-                video.muted = false;
-                if(typeof video.volume === 'number') video.volume = getSavedVolume();
-                setTimeout(()=>{ video.dataset._ig_unmute_processing='0'; }, 1500);
-            }, 150);
-
-        } catch(e) { video.dataset._ig_unmute_processing='0'; console.error(e); }
-    }
+    // =========================================
+    // FORMATO TIEMPO
+    // =========================================
 
     function formatTime(time) {
-        const minutes = Math.floor(time/60);
-        const seconds = Math.floor(time%60);
-        const ms = Math.floor((time%1)*1000);
-        return `${minutes}:${seconds<10?'0':''}${seconds}.${ms.toString().padStart(3,'0')}`;
+
+        if (!time) return '0:00.000';
+
+        const m = Math.floor(time / 60);
+
+        const s = Math.floor(time % 60);
+
+        const ms = Math.floor((time % 1) * 1000);
+
+        return `${m}:${s.toString().padStart(2,'0')}.${ms.toString().padStart(3,'0')}`;
     }
 
-    function addCustomControls(video){
-        if(!video || video.dataset.customControlsAdded) return;
-        video.dataset.customControlsAdded='1';
+    // =========================================
+    // CREAR BOTON
+    // =========================================
 
-        const wrapper = document.createElement('div');
-        wrapper.style.position='relative';
-        video.parentNode.insertBefore(wrapper, video);
-        wrapper.appendChild(video);
+    function createButton(text) {
 
-        const controls = document.createElement('div');
-        controls.style.position='absolute';
-        controls.style.top='10px';
-        controls.style.left='10px';
-        controls.style.background='rgba(0,0,0,0.3)';
-        controls.style.color='white';
-        controls.style.padding='10px';
-        controls.style.borderRadius='5px';
-        controls.style.zIndex='1000';
-        controls.style.display='flex';
-        controls.style.flexDirection='column';
-        controls.style.alignItems='flex-start';
-        controls.style.cursor='default';
-        controls.style.opacity='0';
-        controls.style.transition='opacity 0.3s';
+        const btn = document.createElement('button');
 
-        wrapper.addEventListener('mouseenter',()=>controls.style.opacity='1');
-        wrapper.addEventListener('mouseleave',()=>controls.style.opacity='0');
+        btn.textContent = text;
 
-        const unlockAudio = ()=>{ userInteracted=true; };
+        btn.style.background = 'rgba(30,30,30,0.95)';
+        btn.style.color = 'white';
+        btn.style.border = '1px solid rgba(255,255,255,0.15)';
+        btn.style.padding = '6px';
+        btn.style.borderRadius = '8px';
+        btn.style.cursor = 'pointer';
+        btn.style.fontSize = '12px';
+        btn.style.width = '100%';
 
-        const playBtn = document.createElement('button');
-        playBtn.textContent='Play';
-        playBtn.style.marginBottom='5px';
-        playBtn.addEventListener('click', ()=>{
-            unlockAudio();
-            if(video.paused){ video.play(); playBtn.textContent='Pause'; }
-            else{ video.pause(); playBtn.textContent='Play'; }
-        });
-
-        const speedSelect = document.createElement('select');
-        speedSelect.style.marginBottom='5px';
-        speedSelect.innerHTML=`
-            <option value="0.05">0.05x</option>
-            <option value="0.1">0.1x</option>
-            <option value="0.25">0.25x</option>
-            <option value="0.5">0.5x</option>
-            <option value="0.75">0.75x</option>
-            <option value="1" selected>1x</option>
-            <option value="1.25">1.25x</option>
-            <option value="1.5">1.5x</option>
-            <option value="1.75">1.75x</option>
-            <option value="2">2x</option>
-            <option value="3">3x</option>
-        `;
-        speedSelect.addEventListener('change', e=>{
-            unlockAudio();
-            video.playbackRate=parseFloat(e.target.value);
-        });
-
-        const fsBtn=document.createElement('button');
-        fsBtn.textContent='Fullscreen';
-        fsBtn.style.marginBottom='5px';
-        fsBtn.addEventListener('click', ()=>{
-            unlockAudio();
-            if(document.fullscreenElement) document.exitFullscreen();
-            else if(video.requestFullscreen) video.requestFullscreen();
-            else if(video.webkitRequestFullscreen) video.webkitRequestFullscreen();
-            else if(video.msRequestFullscreen) video.msRequestFullscreen();
-        });
-
-        const dlBtn=document.createElement('button');
-        dlBtn.textContent='Download Image';
-        dlBtn.style.marginBottom='5px';
-        dlBtn.addEventListener('click',()=>{
-            unlockAudio();
-            const canvas=document.createElement('canvas');
-            canvas.width=video.videoWidth;
-            canvas.height=video.videoHeight;
-            const ctx=canvas.getContext('2d');
-            ctx.drawImage(video,0,0,canvas.width,canvas.height);
-            canvas.toBlob(blob=>{
-                const url=URL.createObjectURL(blob);
-                const link=document.createElement('a');
-                link.href=url;
-                link.download=`frame_${Math.floor(video.currentTime*1000)}ms.png`;
-                link.click();
-                URL.revokeObjectURL(url);
-            },'image/png');
-        });
-
-        const volContainer=document.createElement('div');
-        volContainer.style.marginBottom='5px';
-        volContainer.style.display='flex';
-        volContainer.style.flexDirection='column';
-        volContainer.style.alignItems='flex-start';
-        volContainer.style.gap='2px';
-
-        const volSlider=document.createElement('input');
-        volSlider.type='range';
-        volSlider.min=0; volSlider.max=1; volSlider.step=0.01;
-        volSlider.value=getSavedVolume();
-        volSlider.style.accentColor=volSlider.value==0?'grey':'limegreen';
-
-        const volPercent = document.createElement('span');
-        volPercent.style.fontSize='12px';
-        volPercent.textContent = `${Math.round(volSlider.value*100)}%`;
-
-        volSlider.addEventListener('input',()=>{
-            unlockAudio();
-            const v=parseFloat(volSlider.value);
-            video.volume=v;
-            video.muted=v===0;
-            saveVolume(v);
-            volSlider.style.accentColor=v===0?'grey':'limegreen';
-            volPercent.textContent=`${Math.round(v*100)}%`;
-        });
-
-        volContainer.appendChild(volSlider);
-        volContainer.appendChild(volPercent);
-
-        const progress=document.createElement('input');
-        progress.type='range';
-        progress.min=0; progress.max=100; progress.value=0;
-        progress.style.marginBottom='5px';
-        progress.addEventListener('input',()=>{
-            unlockAudio();
-            video.currentTime=(video.duration*progress.value)/100;
-        });
-
-        const timeDisplay=document.createElement('span');
-        timeDisplay.style.marginBottom='5px';
-        timeDisplay.textContent='0:00.000';
-        video.addEventListener('timeupdate',()=>{
-            timeDisplay.textContent=formatTime(video.currentTime);
-            progress.value=(video.currentTime/video.duration)*100;
-        });
-
-        const applyVolume=()=>{
-            const v=getSavedVolume();
-            video.volume=v;
-            video.muted=v===0 && userInteracted;
-            volSlider.value=v;
-            volSlider.style.accentColor=v===0?'grey':'limegreen';
-            volPercent.textContent=`${Math.round(v*100)}%`;
-            forceUnmute(video);
-        };
-
-        video.addEventListener('loadedmetadata', applyVolume);
-        video.addEventListener('play', applyVolume);
-        applyVolume();
-
-        controls.appendChild(playBtn);
-        controls.appendChild(speedSelect);
-        controls.appendChild(fsBtn);
-        controls.appendChild(dlBtn);
-        controls.appendChild(volContainer);
-        controls.appendChild(progress);
-        controls.appendChild(timeDisplay);
-
-        wrapper.appendChild(controls);
+        return btn;
     }
 
-    function setupVideo(video){
-        if(!video || video.dataset._ig_autovol_setup==='1') return;
-        video.dataset._ig_autovol_setup='1';
+    // =========================================
+    // EVITAR DUPLICADOS
+    // =========================================
 
-        video.addEventListener('volumechange',()=>{
-            const v=video.volume;
-            saveVolume(v);
-        });
+    if (window.__IG_CONTROLS__) return;
 
-        video.addEventListener('play', ()=>{ setTimeout(()=>forceUnmute(video),50); });
+    window.__IG_CONTROLS__ = true;
 
-        addCustomControls(video);
-    }
+    // =========================================
+    // POSICION GUARDADA
+    // =========================================
 
-    function handleNode(node){
-        if(!node || node.nodeType!==1) return;
-        if(node.tagName==='VIDEO'){ setupVideo(node); forceUnmute(node); }
-        else if(node.querySelectorAll){
-            node.querySelectorAll('video').forEach(v=>{ setupVideo(v); forceUnmute(v); });
-        }
-    }
+    const savedX =
+        localStorage.getItem('ig_controls_x');
 
-    const observer=new MutationObserver(mutations=>{
-        mutations.forEach(m=>{
-            m.addedNodes.forEach(node=>handleNode(node));
-        });
+    const savedY =
+        localStorage.getItem('ig_controls_y');
+
+    // =========================================
+    // PANEL
+    // =========================================
+
+    const controls =
+        document.createElement('div');
+
+    controls.style.position = 'fixed';
+
+    controls.style.left =
+        savedX || '20px';
+
+    controls.style.top =
+        savedY || '100px';
+
+    controls.style.zIndex = '999999999';
+
+    controls.style.display = 'flex';
+
+    controls.style.flexDirection = 'column';
+
+    controls.style.gap = '6px';
+
+    controls.style.background =
+        'rgba(0,0,0,0.85)';
+
+    controls.style.backdropFilter =
+        'blur(10px)';
+
+    controls.style.padding = '10px';
+
+    controls.style.borderRadius = '14px';
+
+    controls.style.width = '170px';
+
+    controls.style.userSelect = 'none';
+
+    controls.style.boxShadow =
+        '0 0 15px rgba(0,0,0,0.4)';
+
+    document.body.appendChild(controls);
+
+    // =========================================
+    // HEADER DRAG
+    // =========================================
+
+    const dragBar =
+        document.createElement('div');
+
+    dragBar.textContent =
+        'Instagram Controls';
+
+    dragBar.style.color = 'white';
+
+    dragBar.style.fontSize = '12px';
+
+    dragBar.style.fontWeight = 'bold';
+
+    dragBar.style.cursor = 'move';
+
+    dragBar.style.padding = '4px';
+
+    dragBar.style.textAlign = 'center';
+
+    dragBar.style.background =
+        'rgba(255,255,255,0.08)';
+
+    dragBar.style.borderRadius = '8px';
+
+    controls.appendChild(dragBar);
+
+    // =========================================
+    // DRAG SYSTEM
+    // =========================================
+
+    let isDragging = false;
+
+    let offsetX = 0;
+
+    let offsetY = 0;
+
+    dragBar.addEventListener('mousedown', e => {
+
+        isDragging = true;
+
+        offsetX =
+            e.clientX - controls.offsetLeft;
+
+        offsetY =
+            e.clientY - controls.offsetTop;
     });
 
-    observer.observe(document.documentElement||document.body,{childList:true,subtree:true});
-    document.querySelectorAll('video').forEach(v=>{ setupVideo(v); forceUnmute(v); });
+    document.addEventListener('mousemove', e => {
 
-    document.addEventListener('click',()=>{ userInteracted=true; document.querySelectorAll('video').forEach(forceUnmute); },{capture:true,passive:true});
-    document.addEventListener('touchstart',()=>{ userInteracted=true; document.querySelectorAll('video').forEach(forceUnmute); },{capture:true,passive:true});
-    document.addEventListener('keydown',()=>{ userInteracted=true; document.querySelectorAll('video').forEach(forceUnmute); },{capture:true,passive:true});
+        if (!isDragging) return;
 
-    setInterval(()=>{ document.querySelectorAll('video').forEach(v=>{ if(v.dataset._ig_unmute_processing!=='1') forceUnmute(v); }); },1200);
+        const newLeft =
+            e.clientX - offsetX;
 
-    log('Instagram Video Controls + Ocultar Comentarios Toggle cargado.');
+        const newTop =
+            e.clientY - offsetY;
+
+        controls.style.left =
+            newLeft + 'px';
+
+        controls.style.top =
+            newTop + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+
+        if (!isDragging) return;
+
+        isDragging = false;
+
+        // GUARDAR POSICION
+
+        localStorage.setItem(
+            'ig_controls_x',
+            controls.style.left
+        );
+
+        localStorage.setItem(
+            'ig_controls_y',
+            controls.style.top
+        );
+    });
+
+    // =========================================
+    // PLAY / PAUSE
+    // =========================================
+
+    const playBtn =
+        createButton('Play / Pause');
+
+    playBtn.onclick = () => {
+
+        const v = getActiveVideo();
+
+        if (!v) return;
+
+        if (v.paused) {
+
+            v.play();
+
+        } else {
+
+            v.pause();
+        }
+    };
+
+    // =========================================
+    // VELOCIDAD
+    // =========================================
+
+    const speed =
+        document.createElement('select');
+
+    speed.style.background =
+        'rgba(30,30,30,0.95)';
+
+    speed.style.color = 'white';
+
+    speed.style.border =
+        '1px solid rgba(255,255,255,0.15)';
+
+    speed.style.borderRadius = '8px';
+
+    speed.style.padding = '6px';
+
+    speed.innerHTML = `
+        <option value="0.05">0.05x</option>
+        <option value="0.1">0.1x</option>
+        <option value="0.25">0.25x</option>
+        <option value="0.5">0.5x</option>
+        <option value="0.75">0.75x</option>
+        <option value="1" selected>1x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+        <option value="2">2x</option>
+        <option value="3">3x</option>
+    `;
+
+    speed.onchange = () => {
+
+        const v = getActiveVideo();
+
+        if (!v) return;
+
+        v.playbackRate =
+            parseFloat(speed.value);
+    };
+
+    // =========================================
+    // FULLSCREEN
+    // =========================================
+
+    const fsBtn =
+        createButton('Fullscreen');
+
+    fsBtn.onclick = async () => {
+
+        const v = getActiveVideo();
+
+        if (!v) return;
+
+        try {
+
+            if (document.fullscreenElement) {
+
+                await document.exitFullscreen();
+
+            } else {
+
+                const container =
+                    v.closest('article') ||
+                    v.parentElement ||
+                    v;
+
+                await container.requestFullscreen();
+            }
+
+        } catch (e) {
+
+            console.log(e);
+        }
+    };
+
+    // =========================================
+    // DOWNLOAD FRAME
+    // =========================================
+
+    const imgBtn =
+        createButton('Download Frame');
+
+    imgBtn.onclick = () => {
+
+        const v = getActiveVideo();
+
+        if (!v) return;
+
+        const canvas =
+            document.createElement('canvas');
+
+        canvas.width = v.videoWidth;
+
+        canvas.height = v.videoHeight;
+
+        const ctx =
+            canvas.getContext('2d');
+
+        ctx.drawImage(v, 0, 0);
+
+        const a =
+            document.createElement('a');
+
+        a.href =
+            canvas.toDataURL('image/png');
+
+        a.download =
+            `instagram_frame_${Date.now()}.png`;
+
+        a.click();
+    };
+
+    // =========================================
+    // VOLUMEN
+    // =========================================
+
+    const volume =
+        document.createElement('input');
+
+    volume.type = 'range';
+
+    volume.min = 0;
+
+    volume.max = 1;
+
+    volume.step = 0.01;
+
+    volume.value = 1;
+
+    volume.oninput = () => {
+
+        const v = getActiveVideo();
+
+        if (!v) return;
+
+        v.muted = false;
+
+        v.volume =
+            parseFloat(volume.value);
+    };
+
+    // =========================================
+    // PROGRESS
+    // =========================================
+
+    const progress =
+        document.createElement('input');
+
+    progress.type = 'range';
+
+    progress.min = 0;
+
+    progress.max = 100;
+
+    progress.value = 0;
+
+    progress.oninput = () => {
+
+        const v = getActiveVideo();
+
+        if (!v || !v.duration) return;
+
+        v.currentTime =
+            (progress.value / 100) *
+            v.duration;
+    };
+
+    // =========================================
+    // TIEMPO
+    // =========================================
+
+    const time =
+        document.createElement('div');
+
+    time.style.color = 'white';
+
+    time.style.fontSize = '12px';
+
+    time.style.textAlign = 'center';
+
+    // =========================================
+    // UPDATE LOOP
+    // =========================================
+
+    setInterval(() => {
+
+        const v = getActiveVideo();
+
+        if (!v) return;
+
+        v.muted = false;
+
+        if (v.duration) {
+
+            progress.value =
+                (v.currentTime / v.duration) * 100;
+        }
+
+        time.textContent =
+            formatTime(v.currentTime);
+
+    }, 100);
+
+    // =========================================
+    // APPEND
+    // =========================================
+
+    controls.appendChild(playBtn);
+
+    controls.appendChild(speed);
+
+    controls.appendChild(fsBtn);
+
+    controls.appendChild(imgBtn);
+
+    controls.appendChild(volume);
+
+    controls.appendChild(progress);
+
+    controls.appendChild(time);
+
 })();
