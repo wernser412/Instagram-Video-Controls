@@ -4,7 +4,9 @@
 // @version      2025.05.26
 // @description  Controles movibles con posición guardada para Instagram Reels
 // @author       wernser412
+// @downloadURL  https://github.com/wernser412/Instagram-Video-Controls/raw/refs/heads/main/Instagram%20Video%20Controls.user.js
 // @match        https://www.instagram.com/*
+// @icon         https://github.com/wernser412/Instagram-Video-Controls/blob/main/ICONO.png?raw=true
 // @run-at       document-idle
 // @grant        none
 // ==/UserScript==
