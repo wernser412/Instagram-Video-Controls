@@ -2,7 +2,7 @@
 
 **Última Actualización:** 26 de mayo de 2026
 
-![Tampermonkey](https://github.com/wernser412/Instagram-Video-Controls/blob/main/GUI.jpg?raw=true)
+![Tampermonkey](https://raw.githubusercontent.com/wernser412/Instagram-Video-Controls/refs/heads/main/GUI.png?raw=true)
 
 ## 🔍 Descripción
 
