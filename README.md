@@ -1,7 +1,6 @@
 # Instagram Video Controls
 **Última Actualización:** 14 de julio de 2026
 
-
 Panel flotante con controles avanzados para videos y Reels de Instagram.
 
 ![GUI](GUI.png)
