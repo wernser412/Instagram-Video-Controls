@@ -4,7 +4,7 @@
 
 Panel flotante con controles avanzados para videos y Reels de Instagram.
 
-![GUI](https://raw.githubusercontent.com/wernser412/Instagram-Video-Controls/refs/heads/main/GUI.png?raw=true)
+![GUI](GUI.png)
 
 ## 📖 Descripción
 
