@@ -1,34 +1,89 @@
 # Instagram Video Controls
-
-**Última Actualización:** 26 de mayo de 2026
-
-![Tampermonkey](https://raw.githubusercontent.com/wernser412/Instagram-Video-Controls/refs/heads/main/GUI.png?raw=true)
-
-## 🔍 Descripción
-
-**Instagram Video Controls** es un script de usuario para Tampermonkey que añade controles personalizados a los videos de Instagram. Estos controles incluyen la capacidad de reproducir/pausar, ajustar la velocidad de reproducción, entrar en pantalla completa, descargar una imagen del video y mostrar el tiempo transcurrido en minutos, segundos y microsegundos. Los controles solo son visibles cuando se pasa el ratón por encima del video.
-
-## ✨ Características
-
-- Reproducir/Pausar video.
-- Ajuste de velocidad de reproducción (0.1x - 2x).
-- Entrada y salida del modo de pantalla completa.
-- Descargar una imagen del video.
-- Barra de progreso para navegar a través del video.
-- Mostrar el tiempo transcurrido en minutos, segundos y microsegundos.
-- Controles visibles solo al pasar el ratón por encima del video.
-
-## 📥 Instalación
-
-1. Instala la extensión [Tampermonkey](https://www.tampermonkey.net/) en tu navegador.
-2. Haz clic en este enlace para instalar el script:  
-   👉 **[Descargar Script](https://github.com/wernser412/Instagram-Video-Controls/raw/refs/heads/main/Instagram%20Video%20Controls.user.js)**
-
-## 🖥️ Uso
-
-Una vez instalado el script, simplemente visita Instagram y reproduce cualquier video. Los controles personalizados aparecerán automáticamente cuando pases el ratón sobre el video.
+**Última Actualización:** 13 de julio de 2026
 
 
-## 📜 Licencia
+Panel flotante con controles avanzados para videos y Reels de Instagram.
 
-Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para obtener más detalles.
+![GUI](https://raw.githubusercontent.com/wernser412/Instagram-Video-Controls/refs/heads/main/GUI.png?raw=true)
+
+## 📖 Descripción
+
+**Instagram Video Controls** es un UserScript para **Tampermonkey** que añade un panel flotante con controles adicionales para los videos y Reels de Instagram.
+
+El panel permite controlar la reproducción sin depender de los controles originales de Instagram, además de añadir funciones que la plataforma no incluye de forma nativa.
+
+---
+
+# 📥 Instalación
+
+1. Instala la extensión **Tampermonkey** para tu navegador.
+
+2. Instala el script desde GitHub:
+
+**➡️ [Instalar Script](https://github.com/wernser412/Instagram-Video-Controls/raw/refs/heads/main/Instagram%20Video%20Controls.user.js)**
+
+---
+
+# ✨ Características
+
+- ▶️ Reproducir / Pausar video
+- ⏩ Cambiar velocidad de reproducción
+  - 0.1x - 0.25x - 0.5x - 0.75x - 1x - 1.25x - 1.5x - 2x - 3x
+- 🔊 Control de volumen
+- 📈 Barra de progreso
+- ⏱ Mostrar tiempo actual y duración
+- 🖥 Pantalla completa
+- 📸 Descargar el fotograma actual como imagen PNG
+- 🎯 Control automático del video visible
+- 📦 Panel flotante arrastrable
+- 📌 Posición del panel guardada automáticamente
+- 📂 Estado colapsado/expandido persistente
+- 💾 Volumen guardado entre sesiones
+- ⌨️ Atajos de teclado
+- 📱 Compatible con videos y Reels
+
+---
+
+# ⌨️ Atajos de teclado
+
+| Tecla | Acción |
+|--------|--------|
+| Espacio | Reproducir / Pausar |
+| F | Pantalla completa |
+| ← | Retroceder 5 segundos |
+| → | Avanzar 5 segundos |
+| ↑ | Subir volumen |
+| ↓ | Bajar volumen |
+
+Los atajos se desactivan automáticamente cuando se está escribiendo en un cuadro de texto o comentario de Instagram.
+
+---
+
+# 🖥 Uso
+
+Una vez instalado:
+
+1. Abre Instagram.
+2. Reproduce cualquier video o Reel.
+3. El panel aparecerá automáticamente.
+4. Arrástralo a la posición que prefieras.
+
+---
+
+# 💾 Configuración guardada
+
+El script recuerda automáticamente:
+
+- Posición del panel.
+- Estado colapsado o expandido.
+- Nivel de volumen.
+
+No es necesario configurarlo cada vez que abras Instagram.
+
+---
+
+# 📄 Licencia
+
+Este proyecto se distribuye bajo la licencia **MIT**.
+
+Consulta el archivo **LICENSE** para más información.
